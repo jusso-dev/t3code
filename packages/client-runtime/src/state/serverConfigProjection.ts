@@ -166,7 +166,8 @@ export function applyServerConfigProjection(
       return Option.map(current, (projection) => ({
         config: {
           ...projection.config,
-          environmentThemes: event.payload.themes.length > 0 ? event.payload.themes : undefined,
+          // Kept when empty: undefined means the theme event has not arrived yet.
+          environmentThemes: event.payload.themes,
         },
         latestEvent: event,
         source: "live",
@@ -180,5 +181,14 @@ export function applyServerConfigProjection(
         latestEvent: event,
         source: "live",
       }));
+    case "diskSpaceUpdated":
+      return Option.map(current, (projection) => {
+        const { diskSpace: _previous, ...rest } = projection.config;
+        return {
+          config: event.payload.level === "ok" ? rest : { ...rest, diskSpace: event.payload },
+          latestEvent: event,
+          source: "live",
+        };
+      });
   }
 }
